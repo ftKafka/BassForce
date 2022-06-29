@@ -58,18 +58,27 @@ public class WayGenerator : MonoBehaviour
             }
 
             waveFormArray[i] /= sampleCount * 2;
-            
-            triangles[tris + 0] = vert + waveFormArray[i];
-            triangles[tris + 1] = vert + 1;
-            triangles[tris + 2] = vert + 1;
-            triangles[tris + 3] = vert + waveFormArray[i];
-            triangles[tris + 4] = vert + 1;
-            triangles[tris + 5] = vert + 2;
-
-            vert++;
-            tris += 6;
         }
 
+        for (int z = 0; z < waveFormArray[i]; z++)
+        {
+            for (int x = 0; x < xSize; x++)
+            {
+                triangles[tris + 0] = vert + 0;
+                triangles[tris + 1] = vert + xSize + 1;
+                triangles[tris + 2] = vert + 1;
+                triangles[tris + 3] = vert + 1;
+                triangles[tris + 4] = vert + xSize + 1;
+                triangles[tris + 5] = vert + xSize + 2;
+
+                vert++;
+                tris += 6;
+
+
+                yield return new WaitForSeconds(.01f);
+            }
+            vert++;
+        }
         //Получаем сглаженный массив, с шириной окна frameSize
         float[] avgArray = MovingAverage(frameSize, waveFormArray);
         path = CreatePath(avgArray);
