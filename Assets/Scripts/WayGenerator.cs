@@ -4,49 +4,36 @@ using UnityEngine;
 
 public class WayGenerator : MonoBehaviour
 {
+    public GameObject Player;
+    // меш Вершины и тринглы
     Mesh mesh;
 
     Vector3[] vertices;
-    float[] triangles;
+    int[] triangles;
 
-    public int xSize = 20;
-    public int zSize = 20;
-
-    ///...................................
-
-    private const int frameSize = 10;
+    //
     public int size = 2048;
-    public PolygonCollider2D poly;
 
-    private readonly int lineScale = 5;
     private readonly int quality = 100;
     private int sampleCount = 0;
 
     private float[] waveFormArray;
     private float[] samples;
 
-    private Vector2[] path;
     private AudioSource myAudio;
+
+
 
     private void Start()
     {
-        mesh = new Mesh();
-        GetComponent<MeshFilter>().mesh = mesh;
-
-        int vert = 0;
-        int tris = 0;
-        ///.......................................................
-
         myAudio = gameObject.GetComponent<AudioSource>();
 
         int freq = myAudio.clip.frequency;
         sampleCount = freq / quality;
-
         samples = new float[myAudio.clip.samples * myAudio.clip.channels];
 
         myAudio.clip.GetData(samples, 0);
         waveFormArray = new float[(samples.Length / sampleCount)];
-        triangles = new float[(waveFormArray.Length)];
 
         for (int i = 0; i < waveFormArray.Length; i++)
         {
@@ -58,67 +45,98 @@ public class WayGenerator : MonoBehaviour
             }
 
             waveFormArray[i] /= sampleCount * 2;
+
         }
 
-        for (int z = 0; z < waveFormArray[i]; z++)
-        {
-            for (int x = 0; x < xSize; x++)
-            {
-                triangles[tris + 0] = vert + 0;
-                triangles[tris + 1] = vert + xSize + 1;
-                triangles[tris + 2] = vert + 1;
-                triangles[tris + 3] = vert + 1;
-                triangles[tris + 4] = vert + xSize + 1;
-                triangles[tris + 5] = vert + xSize + 2;
-
-                vert++;
-                tris += 6;
-
-
-                yield return new WaitForSeconds(.01f);
-            }
-            vert++;
-        }
         //Получаем сглаженный массив, с шириной окна frameSize
-        float[] avgArray = MovingAverage(frameSize, waveFormArray);
-        path = CreatePath(avgArray);
-        poly.points = path;
+        /*
+        //float[] avgArray = MovingAverage(frameSize, waveFormArray);
+        //path = CreatePath(avgArray);
+        //poly.points = path;
+        */
 
+        //Полигоны
+
+        mesh = new Mesh();
+        GetComponent<MeshFilter>().mesh = mesh;
+        
+        CreateShape(waveFormArray);
+
+        UpdateMesh();
     }
 
-    private Vector2[] CreatePath(float[] src)
+    private void Update()
     {
-        Vector2[] result = new Vector2[src.Length];
+        
+    }
 
-        for (int i = 0; i < size; i++)
+
+    //релод полигончиков
+    void UpdateMesh()
+    {
+        mesh.Clear();
+
+        mesh.vertices = vertices;
+        mesh.triangles = triangles;
+
+        mesh.RecalculateNormals();
+    }
+    /*
+    //кружочки
+    private void OnDrawGizmos()
+    {
+        if (vertices == null)
+            return;
+
+        for (int i = 0; i < vertices.Length; i++)
         {
-            result[i] = new Vector2(i * 0.01f, Mathf.Abs(src[i] * lineScale));
+            Gizmos.DrawSphere(vertices[i], .1f);
         }
-
-        return result;
     }
+    */
 
-    private float[] MovingAverage(int frameSize, float[] data)
+    //полигоны
+    private void CreateShape(float[] waveFormArray)
     {
-        float sum = 0;
-        float[] avgPoints = new float[data.Length - frameSize + 1];
+        vertices = new Vector3[waveFormArray.Length * 3 + 1];
 
-        for (int counter = 0; counter <= data.Length - frameSize; counter++)
+        //perling noize
+        for (int z = 0, i = 0; z <= waveFormArray.Length; z++)
         {
-            int innerLoopCounter = 0;
-            int index = counter;
-
-            while (innerLoopCounter < frameSize)
+            for (int x = 0; x <= 1; x++)
             {
-                sum = sum + data[index];
-                innerLoopCounter += 1;
-                index += 1;
+                //float y = Mathf.PerlinNoise(x * .3f, z * .3f) * 2f;
+                float y = 0;
+                if (z < waveFormArray.Length)
+                    y = waveFormArray[z]*100;
+                vertices[i] = new Vector3(x, y, z);
+                i++;
             }
-
-            avgPoints[counter] = sum / frameSize;
-            sum = 0;
-
         }
-        return avgPoints;
+
+        Debug.Log(waveFormArray.Length);
+        triangles = new int[waveFormArray.Length * 6];
+        Debug.Log(triangles.Length);
+        int vert = 0;
+        int tris = 0;
+
+        for (int z = 0; z < waveFormArray.Length; z++)
+        {
+            triangles[tris + 0] = vert + 0;
+            triangles[tris + 1] = vert + 1 + 1;
+            triangles[tris + 2] = vert + 1;
+            triangles[tris + 3] = vert + 1;
+            triangles[tris + 4] = vert + 1 + 1;
+            triangles[tris + 5] = vert + 1 + 2;
+
+
+            //один верт идет после фора и один для состыкови по оси фронтали (я соединил)
+            vert += 2;
+            tris += 6;
+        }
+
+        Player.GetComponent<ForwardRun>().longPlay = myAudio.clip.length;
+        Player.GetComponent<ForwardRun>().verticesForvard = vertices;
+        Player.GetComponent<ForwardRun>().Iterial();
     }
 }

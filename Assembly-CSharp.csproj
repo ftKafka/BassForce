@@ -60,6 +60,7 @@
     <Compile Include="Assets\Scripts\controller.cs" />
     <Compile Include="Assets\Scripts\WayGenerator.cs" />
     <Compile Include="Assets\Scripts\MeshGenerator.cs" />
+    <Compile Include="Assets\Scripts\ForwardRun.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
