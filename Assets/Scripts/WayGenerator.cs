@@ -98,10 +98,10 @@ public class WayGenerator : MonoBehaviour
     //полигоны
     private void CreateShape(float[] waveFormArray)
     {
-        vertices = new Vector3[waveFormArray.Length * 3 + 1];
-
+        vertices = new Vector3[waveFormArray.Length * 2 + 2];
+        Debug.Log(vertices.Length);
         //perling noize
-        for (int z = 0, i = 0; z <= waveFormArray.Length; z++)
+        for (int z = 0, i = 0; z <= waveFormArray.Length - 1; z++)
         {
             for (int x = 0; x <= 1; x++)
             {
@@ -137,6 +137,5 @@ public class WayGenerator : MonoBehaviour
 
         Player.GetComponent<ForwardRun>().longPlay = myAudio.clip.length;
         Player.GetComponent<ForwardRun>().verticesForvard = vertices;
-        Player.GetComponent<ForwardRun>().Iterial();
     }
 }
